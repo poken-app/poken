@@ -911,6 +911,11 @@
     const sel = pending;
     hideToolbar();
     document.getSelection()?.removeAllRanges();
+    // The toolbar's mousedown is prevented so the selection survives the click, which also
+    // leaves a double-clicked key term focused, and its :focus gloss tooltip stuck on screen
+    // over the new explanation. Drop that focus now that the selection is consumed.
+    const active = document.activeElement;
+    if (active?.classList?.contains("learn-term")) active.blur();
     spawn(sel, mode, question);
   }
 
@@ -1473,6 +1478,7 @@
     const sessionLang = document.getElementById("sessionLanguage");
     if (customTopic) customTopic.value = topic;
     if (sessionLang) sessionLang.value = langEl.value;
+    window.pokenSeedQuestion = null; // this session is about the topic, not an open question
     teachBtn.disabled = true;
     hide();
     await connect();

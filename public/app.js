@@ -764,6 +764,7 @@ function setMicActive(active) {
 
 function setStatus(msg, type) {
   statusText.textContent = msg;
+  statusText.title = msg; // the line is clipped to one row in CSS; hover shows the full text
   statusDot.className = "status-dot" + (type === "connected" ? " connected" : type === "error" ? " error" : "");
 }
 
@@ -2422,6 +2423,11 @@ function revisitConcept(label, nodeId, gapText = "") {
 }
 
 function disconnect(keepScreen = false) {
+  // A session started from Open Questions carries a seed question that is settled when the
+  // reflection arrives (showReflection → pokenSettleSeedQuestion, which runs after
+  // disconnect(true)). A full disconnect means no reflection is coming, so drop the seed
+  // here or it opens the next, unrelated session.
+  if (!keepScreen) window.pokenSeedQuestion = null;
   if (ws) {
     ws.onclose = null;
     try { ws.close(); } catch (_) {}
@@ -2528,6 +2534,10 @@ async function connect(opts = {}) {
     lastError = null;
     if (!resuming) debugEvents.length = 0; // clear debug log for new session
     awaitingReflection = false;
+    // End session is disabled when a session ends and used to be re-enabled only by
+    // showSetup(). Learn Mode's "Teach this" and Open Questions' "I can answer this now"
+    // call connect() directly, so every session after the first could not be ended.
+    stopBtn.disabled = false;
     stopSetupHardware();
     sessionTopic = resuming ? (resumeToken.topic || getSelectedTopic()) : getSelectedTopic();
     sessionLanguage = resuming ? (resumeToken.language || getSessionLanguage()) : getSessionLanguage();
@@ -3009,6 +3019,7 @@ function sessionRecapLabel() {
 // ── Boot ─────────────────────────────────────────────────────────────────────
 if (sessionHomeBtn) {
   sessionHomeBtn.addEventListener("click", () => {
+    window.pokenSeedQuestion = null; // leaving without a reflection: nothing settles the seed
     disconnect(true);
     showLanding();
   });
@@ -3017,6 +3028,7 @@ if (sessionHomeBtn) {
 // Same exit as the logo, but labelled. A session is a live socket and a hot mic, so leaving
 // has to be something you can find without guessing that the wordmark is a button.
 document.getElementById("sessionBackBtn")?.addEventListener("click", () => {
+  window.pokenSeedQuestion = null;
   disconnect(true);
   showLanding();
 });
