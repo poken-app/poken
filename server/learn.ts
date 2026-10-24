@@ -125,6 +125,8 @@ function systemInstruction(language: string): string {
 Rules:
 - Explain fully and directly. Do NOT quiz the learner, do NOT ask them questions, do NOT withhold information Socratically. The teaching phase is where they get tested.
 - Break the concept into a clear sequence of ideas, one idea per paragraph. Lead with the core mechanism, then why it works, then a concrete example, then the edge or the common misunderstanding. Adapt this to the topic.
+- Examples come from the subject itself: a real case, a worked problem, actual numbers. Do not reach for an everyday analogy from an unrelated domain (sharing candies, pizza slices, water in pipes) unless the learner asked for simpler words. The reader is an adult or a serious student; never talk down to them.
+- Say each thing once. Stop when the idea is complete; a tight explanation beats an exhaustive one.
 - Prefer mechanism over vocabulary. When a term is unavoidable, define it in the same sentence.
 - Be precise. No filler, no motivational framing, no "great question".
 - Write in ${language}.
@@ -191,11 +193,11 @@ Answer their question directly: the first sentence is the answer, then explain w
   if (simplify) {
     return `${context}
 
-They found that span hard to follow. Re-explain what it means in much simpler words, as if to a curious 12-year-old: no jargon (or define it in plain words), one concrete everyday analogy, short sentences. 1–3 short paragraphs. Keep it accurate — simpler, not wrong. Never refer to "the highlighted text" or "the passage".`;
+They found that span hard to follow. Re-explain what it means in much simpler words for a newcomer to the subject: no jargon (or define it in plain words), short sentences, and at most one analogy, only if it genuinely clarifies. 1–3 short paragraphs. Keep it accurate — simpler, not wrong. Never refer to "the highlighted text" or "the passage".`;
   }
   return `${context}
 
-They want to go deeper on exactly that span. Explain the selected idea in depth: its mechanism, why it is the case, and where it breaks or is commonly misunderstood. Do not re-summarize the parent paragraph or the broader topic. Assume everything on the trail is already understood.`;
+They want to go deeper on exactly that span. Explain the selected idea one level further: its mechanism, why it is the case, and where it breaks or is commonly misunderstood. Stay on that exact idea, at the level of the text they were reading or above; do not drift into neighbouring topics, and do not open with an analogy from everyday life. Do not re-summarize the parent paragraph or the broader topic. Assume everything on the trail is already understood. 2–4 paragraphs.`;
 }
 
 function clean(s: unknown, max: number): string {
@@ -351,7 +353,8 @@ ${text}
 """
 
 1. keyTerms: the 3–6 technical terms in it a learner would most need defined. Each "term" must be copied EXACTLY as it appears in the explanation (same spelling and case). Each "gloss" is a plain-language definition of at most 15 words, written in ${language}.
-2. suggestions: 3 short (2–6 word) follow-up topics worth going deeper on next, that the explanation mentions or implies but does not fully explain. Written in ${language}.` }] }],
+2. suggestions: 3 short (2–6 word) follow-up topics worth going deeper on next, that the explanation mentions or implies but does not fully explain. Written in ${language}.
+3. title: a 2–6 word title for this explanation, like a book's section heading (no trailing punctuation). Written in ${language}.` }] }],
         config: {
           responseMimeType: 'application/json',
           responseSchema: {
@@ -362,8 +365,9 @@ ${text}
                 items: { type: Type.OBJECT, properties: { term: { type: Type.STRING }, gloss: { type: Type.STRING } }, required: ['term', 'gloss'] },
               },
               suggestions: { type: Type.ARRAY, items: { type: Type.STRING } },
+              title: { type: Type.STRING },
             },
-            required: ['keyTerms', 'suggestions'],
+            required: ['keyTerms', 'suggestions', 'title'],
           },
         },
       });
@@ -377,7 +381,8 @@ ${text}
         .filter((s: any) => typeof s === 'string' && s.trim())
         .slice(0, 3)
         .map((s: string) => s.trim().slice(0, 80));
-      return c.json({ keyTerms, suggestions });
+      const title = typeof parsed.title === 'string' ? parsed.title.trim().replace(/[.:;]+$/, '').slice(0, 60) : '';
+      return c.json({ keyTerms, suggestions, title });
     } catch (err: any) {
       console.error('[Poken][Learn] extras failed:', err?.message ?? err);
       return c.json({ keyTerms: [], suggestions: [] });   // extras are optional; never break the page

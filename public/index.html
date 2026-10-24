@@ -1364,6 +1364,8 @@
     .learn-card > #learnTree > .learn-node:first-child { margin-top: 0; }
     .learn-node { margin-top: 1.25rem; }
     .learn-node.child { margin: 0.75rem 0 1rem 0.25rem; padding-left: 1rem; border-left: 2px solid var(--poken-accent); }
+    /* Five levels of indent at most; deeper branches stack under their parent instead of squeezing right. */
+    .learn-node.child .learn-node.child .learn-node.child .learn-node.child .learn-node.child .learn-node.child { margin-left: calc(-1rem - 2px); }
     .learn-crumb { font-size: 0.75rem; color: var(--poken-text-secondary); margin-bottom: 0.5rem; letter-spacing: 0.01em; }
     /* Collapsing a branch: the crumb and question stay so you can still read what it was,
        everything under it folds away. A deep tree is unreadable otherwise. */

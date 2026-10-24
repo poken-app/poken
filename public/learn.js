@@ -680,6 +680,13 @@
       const extras = await res.json();
       if (!byId(node.id)) return;   // tree was reset meanwhile
       applyExtras(node, extras);
+      // A branch is labelled with its highlight until then; a short title reads better in the
+      // contents and the breadcrumb. The root keeps the topic.
+      if (node.parentId != null && extras.title) {
+        node.label = extras.title;
+        node.el.querySelector(":scope > .learn-crumb-row > .learn-crumb").innerHTML = crumbHtml(node);
+        queueToc();
+      }
       persist(node);
     } catch (_) { /* extras are optional */ }
   }
